@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carbon "Tile": flat layer-01 surface, 1px subtle border, no radius, no shadow. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/cds_layer_01" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/cds_border_subtle_01" />
+</shape>

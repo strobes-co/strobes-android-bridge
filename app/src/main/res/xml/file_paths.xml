@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Only used on API 26-28 (see ProxyTools.saveCaCertToDownloads) — API
+         29+ writes via MediaStore.Downloads and already gets a content:// URI
+         with no FileProvider needed. -->
+    <external-path name="downloads" path="Download/" />
+</paths>

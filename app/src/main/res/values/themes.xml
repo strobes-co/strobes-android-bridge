@@ -1,0 +1,85 @@
+<resources>
+    <!--
+      Forced-dark, not DayNight: the web platform defaults every org to the
+      g100 dark theme (ThemeProvider defaultTheme='g100' in strobes-fe), and
+      this app has no light-theme token set to fall back to, so following
+      the device's light/dark setting would just produce a half-themed
+      screen. Carbon components favor flat surfaces over elevation shadows
+      and perfectly square corners over rounded ones — both encoded below
+      rather than per-view, so new views default to matching automatically.
+    -->
+    <style name="Theme.StrobesBridge" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/cds_button_primary</item>
+        <item name="colorPrimaryDark">@color/cds_background</item>
+        <item name="colorOnPrimary">@color/cds_text_on_color</item>
+        <item name="colorAccent">@color/cds_button_primary</item>
+        <item name="colorSurface">@color/cds_layer_01</item>
+        <item name="colorOnSurface">@color/cds_text_primary</item>
+        <item name="colorError">@color/cds_support_error</item>
+        <item name="android:windowBackground">@color/cds_background</item>
+        <item name="android:statusBarColor">@color/cds_background</item>
+        <item name="android:navigationBarColor">@color/cds_background</item>
+        <item name="android:textColorPrimary">@color/cds_text_primary</item>
+        <item name="android:textColorSecondary">@color/cds_text_secondary</item>
+        <item name="android:textColorHint">@color/cds_text_placeholder</item>
+
+        <item name="materialButtonStyle">@style/Widget.StrobesBridge.Button.Primary</item>
+        <item name="textInputStyle">@style/Widget.StrobesBridge.TextInputLayout</item>
+    </style>
+
+    <!-- Carbon buttons: perfectly square corners, flat (no elevation), 48dp field height. -->
+    <style name="Widget.StrobesBridge.Button.Primary" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/cds_button_primary</item>
+        <item name="android:textColor">@color/cds_text_on_color</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="cornerRadius">0dp</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="rippleColor">@color/cds_button_primary_active</item>
+    </style>
+
+    <style name="Widget.StrobesBridge.Button.Secondary" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">@color/cds_border_strong_01</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">@color/cds_text_primary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="cornerRadius">0dp</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="rippleColor">@color/cds_layer_02</item>
+    </style>
+
+    <!-- Small inline action for a compact status row (Enable/Install/etc next
+         to a dot+label) — same flat look as Secondary, just sized to sit on
+         one line instead of demanding its own full-width 48dp bar. -->
+    <style name="Widget.StrobesBridge.Button.Compact" parent="Widget.StrobesBridge.Button.Secondary">
+        <item name="android:minHeight">32dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- Carbon text inputs: filled box, no visible corner radius, bottom-only focus rule. -->
+    <style name="Widget.StrobesBridge.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="boxBackgroundColor">@color/cds_field_02</item>
+        <item name="boxBackgroundMode">filled</item>
+        <item name="boxCornerRadiusTopStart">0dp</item>
+        <item name="boxCornerRadiusTopEnd">0dp</item>
+        <item name="boxCornerRadiusBottomStart">0dp</item>
+        <item name="boxCornerRadiusBottomEnd">0dp</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxStrokeColor">@color/cds_button_primary</item>
+        <item name="hintTextColor">@color/cds_button_primary</item>
+        <item name="android:textColorHint">@color/cds_text_helper</item>
+    </style>
+</resources>

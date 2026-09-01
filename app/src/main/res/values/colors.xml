@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      IBM Carbon Design System — g100 (dark) theme tokens, the same palette
+      and default theme the Strobes web platform ships with (strobes-fe
+      app.scss: `:root[data-app-theme='g100']`, ThemeProvider defaultTheme).
+      Named after their Carbon token, not their hex, so this file stays a
+      drop-in reference if the web platform's theme ever shifts.
+    -->
+    <color name="cds_background">#161616</color>
+    <color name="cds_layer_01">#262626</color>
+    <color name="cds_layer_02">#393939</color>
+    <color name="cds_field_02">#393939</color>
+    <color name="cds_border_subtle_00">#393939</color>
+    <color name="cds_border_subtle_01">#525252</color>
+    <color name="cds_border_strong_01">#6f6f6f</color>
+
+    <color name="cds_text_primary">#f4f4f4</color>
+    <color name="cds_text_secondary">#c6c6c6</color>
+    <color name="cds_text_helper">#a8a8a8</color>
+    <color name="cds_text_placeholder">#6f6f6f</color>
+    <color name="cds_text_on_color">#ffffff</color>
+
+    <color name="cds_icon_primary">#f4f4f4</color>
+    <color name="cds_icon_secondary">#c6c6c6</color>
+
+    <!-- Interactive — matches strobes-fe's explicit cds button-primary override -->
+    <color name="cds_button_primary">#0f62fe</color>
+    <color name="cds_button_primary_active">#002d9c</color>
+    <color name="cds_link_primary">#4589ff</color>
+    <color name="cds_focus">#ffffff</color>
+
+    <!-- Support (status) colors -->
+    <color name="cds_support_success">#24a148</color>
+    <color name="cds_support_error">#fa4d56</color>
+    <color name="cds_support_warning">#f1c21b</color>
+    <color name="cds_support_info">#4589ff</color>
+    <color name="cds_support_neutral">#8d8d8d</color>
+
+    <!-- Strobes brand mark bars (src/images/strobes_app_logo.svg) -->
+    <color name="brand_bar_red">#da1e28</color>
+    <color name="brand_bar_yellow">#f1c21b</color>
+    <color name="brand_bar_purple">#8a3ffc</color>
+    <color name="brand_bar_green">#198038</color>
+</resources>

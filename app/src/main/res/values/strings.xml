@@ -1,0 +1,113 @@
+<resources>
+    <string name="app_name">Strobes Bridge</string>
+
+    <string name="status_not_paired">Not paired</string>
+    <string name="label_root">Root</string>
+    <string name="root_checking">Checking…</string>
+    <string name="section_pairing">Pairing details</string>
+    <string name="section_traffic_interception">Traffic interception</string>
+    <string name="proxy_stopped">Stopped</string>
+    <string name="proxy_running">Running</string>
+    <string name="label_ca_cert">CA cert</string>
+    <string name="ca_not_installed">Not installed</string>
+    <string name="ca_installed">Installed (user cert store)</string>
+    <string name="label_captured">Captured</string>
+    <string name="captured_zero">0 exchanges</string>
+    <string name="action_install_ca">Install CA cert</string>
+    <string name="action_remove_ca">Remove CA cert</string>
+    <string name="action_enable_proxy">Enable proxy</string>
+    <string name="action_disable_proxy">Disable proxy</string>
+
+    <string name="section_root_ca">System trust store (advanced)</string>
+    <string name="root_ca_not_installed">Not installed</string>
+    <string name="root_ca_staged">Staged — reboot to activate</string>
+    <string name="root_ca_active">Active in system store</string>
+    <string name="root_ca_hint">Trusted by apps that don\'t opt into user certs — the modern-SDK default. Needs a device reboot to take effect (Magisk module).</string>
+    <string name="action_install_root_ca">Install (reboot required)</string>
+    <string name="action_reboot_now">Reboot now</string>
+    <string name="action_remove_root_ca">Remove (reboot required)</string>
+    <string name="reboot_dialog_title_install">Reboot to activate root CA?</string>
+    <string name="reboot_dialog_message_install">The module is staged. Rebooting now will restart the device and merge it into the system trust store. Every running app (including this bridge\'s own connection) will restart too.</string>
+    <string name="reboot_dialog_title_remove">Reboot to remove root CA?</string>
+    <string name="reboot_dialog_message_remove">The module is marked for removal. Rebooting now will restart the device and drop the CA from the system trust store.</string>
+    <string name="action_reboot">Reboot</string>
+    <string name="action_later">Later</string>
+
+    <string name="section_frida">Cert/SSL-pinning bypass (advanced)</string>
+    <string name="frida_not_enabled">Not enabled</string>
+    <string name="frida_downloading">Downloading frida-inject…</string>
+    <string name="frida_enabled">Enabled — ready for pinning-bypass requests</string>
+    <string name="frida_hint">One-time setup: downloads frida-inject matched to this device\'s real CPU architecture. Once enabled, a pentest agent can request cert/SSL-pinning bypass injection into a specific running app — this toggle only stages the tool, it never injects anything by itself.</string>
+    <string name="action_enable_frida">Enable Frida</string>
+    <string name="action_frida_enabled">Enabled</string>
+    <string name="hint_server_url">Server URL (e.g. http://10.0.2.2:8000)</string>
+    <string name="hint_org_id">Organization ID</string>
+    <string name="hint_api_key">API key</string>
+    <string name="hint_shell_name">Device label (e.g. pixel-8-test-lab)</string>
+    <string name="action_start">Start bridge</string>
+    <string name="action_stop">Stop</string>
+    <string name="footer_hint">Requires root (Magisk/KernelSU) for full functionality</string>
+
+    <string name="accessibility_service_description">Lets Strobes Bridge automate taps, swipes, typing, and screenshots on this device without root — used only while a pentest engagement you paired this device to is actively driving it.</string>
+    <string name="section_automation">Automation (non-root fallback)</string>
+    <string name="automation_root_available">Root available — full shell automation active; this fallback isn\'t needed.</string>
+    <string name="automation_accessibility_enabled">Accessibility automation active</string>
+    <string name="automation_accessibility_disabled">Accessibility service not enabled</string>
+    <string name="automation_hint_no_root">No root detected. Enable the Accessibility Service below to unlock non-root tap/swipe/type/screenshot automation — everything else (arbitrary shell, IMEI/SMS, pm install, system-wide traffic interception) still needs root and has no substitute.</string>
+    <string name="action_open_accessibility_settings">Open Accessibility Settings</string>
+    <string name="automation_capability_matrix">Without root: tap, swipe, type (into the focused field), screenshot (Android 11+), UI dump, launch an app by package or component.\nStill needs root: arbitrary shell commands, IMEI/SMS, installing/clearing apps, system-wide traffic interception.</string>
+
+    <string name="tab_status">Status</string>
+    <string name="tab_traffic">Traffic</string>
+    <string name="traffic_empty">No traffic captured yet.\nBrowse any app on this device — capture runs automatically once the bridge is started.</string>
+    <string name="traffic_detail_request">Request</string>
+    <string name="traffic_detail_response">Response</string>
+    <string name="traffic_detail_headers">Headers</string>
+    <string name="traffic_detail_body">Body</string>
+    <string name="traffic_detail_body_empty">(empty)</string>
+    <string name="traffic_detail_body_truncated">\n… (truncated)</string>
+    <string name="traffic_detail_close">Close</string>
+
+    <string name="traffic_hosts_empty">No traffic captured yet.\nBrowse any app on this device — capture runs automatically once the bridge is started.</string>
+    <string name="traffic_host_back">Back</string>
+    <string name="action_setup_guide">Setup guide</string>
+    <string name="action_capability_table">Root vs. non-root</string>
+    <string name="device_status_title">Device status</string>
+    <string name="action_device_status">Automation, proxy &amp; CA status</string>
+
+    <string name="test_device_warning_short">Test devices only — never install on a personal device.</string>
+    <string name="test_device_warning_title">This app is for provisioned test devices only</string>
+    <string name="test_device_warning_body">Strobes Bridge installs a local MITM proxy and (optionally) automates the device on behalf of a pentest engagement. Only install it on a device that has been provisioned specifically for testing on the Strobes platform. Never install it on a personal device, or a device with personal accounts, photos, messages, or other sensitive data — this app can read traffic, SMS, and other data on the device it runs on.</string>
+    <string name="test_device_warning_ack">I confirm this is a device provisioned for Strobes testing, not a personal device</string>
+
+    <string name="onboarding_title">Setup guide</string>
+    <string name="onboarding_step_warning_title">Test devices only</string>
+    <string name="onboarding_step_root_title">Root check</string>
+    <string name="onboarding_step_root_body_available">Root access detected — every capability below works at full strength, no extra setup needed.</string>
+    <string name="onboarding_step_root_body_unavailable">No root detected on this device. The steps that follow set up the non-root fallback path: Accessibility automation, permission grants, and a user-trusted CA cert.</string>
+    <string name="onboarding_step_permissions_title">Permissions</string>
+    <string name="onboarding_step_permissions_body">Grant these so the non-root path can read SMS (OTP automation), phone state, media, and location when a test calls for it. None of these require root.</string>
+    <string name="action_grant_permissions">Grant permissions</string>
+    <string name="onboarding_step_accessibility_title">Accessibility automation</string>
+    <string name="onboarding_step_accessibility_body">Enables tap, swipe, type, screenshot, and UI-dump automation without root — the same actions a pentest agent drives via root shell on a rooted device.</string>
+    <string name="onboarding_step_ca_title">Trust the local proxy\'s CA cert</string>
+    <string name="onboarding_step_ca_body_root">One tap writes the cert straight into the user trust store as root — no dialog needed.</string>
+    <string name="onboarding_step_ca_body_nonroot">Android doesn\'t let an app install a CA certificate on your behalf anymore — download the cert file below, then add it yourself from Settings. Needed for HTTPS traffic capture to work in apps that opt into user certs.</string>
+    <string name="action_download_ca_cert">Download certificate</string>
+    <string name="action_install_downloaded_cert">Install certificate</string>
+    <string name="action_open_security_settings">Open Settings manually</string>
+    <string name="onboarding_step_ca_manual_steps">If \"Install certificate\" above doesn\'t open the system installer: Settings → Security → More security settings → Encryption &amp; credentials → \"Install a certificate\" → \"CA certificate\" → confirm the warning → browse to Downloads and pick the file. Come back here — the status below updates once it\'s trusted.</string>
+    <string name="onboarding_step_capability_title">What you get</string>
+    <string name="onboarding_step_done_title">You\'re set</string>
+    <string name="onboarding_step_done_body">Head back to the main screen, fill in your pairing details (or scan the pairing QR code), and start the bridge.</string>
+    <string name="action_back">Back</string>
+    <string name="action_next">Next</string>
+    <string name="action_finish">Finish</string>
+    <string name="cert_trusted">Trusted by this device</string>
+    <string name="cert_not_trusted">Not yet trusted</string>
+
+    <string name="capability_table_title">Root vs. non-root capability</string>
+    <string name="cap_col_capability">Capability</string>
+    <string name="cap_col_root">Root</string>
+    <string name="cap_col_nonroot">Non-root</string>
+</resources>

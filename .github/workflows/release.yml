@@ -1,0 +1,56 @@
+name: Release APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_name:
+        description: "Release name/tag suffix"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Determine version
+        id: version
+        run: |
+          RUN_TAG="run-${{ github.run_number }}"
+          if [ -n "${{ github.event.inputs.release_name }}" ]; then
+            RUN_TAG="${{ github.event.inputs.release_name }}"
+          fi
+          echo "tag=$RUN_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Rename APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/strobes-bridge-${{ steps.version.outputs.tag }}.apk"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Strobes Bridge ${{ steps.version.outputs.tag }}"
+          files: dist/*.apk
+          generate_release_notes: true

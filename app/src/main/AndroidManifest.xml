@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Lets list_packages enumerate every installed app without root, via
+         PackageManager, instead of needing `pm list packages` through a
+         root shell. A sideloaded internal tool like this is exactly the
+         case Play's package-visibility policy exempts. -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
+
+    <!-- Non-root capability, requested at runtime from the onboarding wizard
+         (see OnboardingActivity's Permissions step) — every one of these is
+         a real, testable Android permission a target app itself could be
+         granted, none of them need root:
+         - READ_SMS/RECEIVE_SMS: OTP automation without root (TelephonyTools
+           falls back to content://sms when root is unavailable).
+         - READ_PHONE_STATE: partial device/SIM info non-root.
+         - READ_MEDIA_*/READ_EXTERNAL_STORAGE: shared media, not arbitrary
+           app data — still strictly more than the app-sandbox-only default.
+         - ACCESS_FINE/COARSE_LOCATION: for testing location-aware app
+           behavior. -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <!-- Only needed to save the downloadable CA cert on API 26-28 — API 29+
+         writes to MediaStore.Downloads without any permission (scoped storage). -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:theme="@style/Theme.StrobesBridge"
+        android:usesCleartextTraffic="true"
+        android:allowBackup="false">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Pairing deep link: strobesbridge://pair?server=...&org_id=...&api_key=...&bridge_id=...&name=...
+                 The Strobes web UI renders this as a QR code when creating an
+                 Android bridge shell; scanning it (or tapping it on-device)
+                 opens this activity pre-filled, mirroring how the desktop
+                 bridge's install.sh embeds the same values into a one-liner. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="strobesbridge" android:host="pair" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".OnboardingActivity"
+            android:exported="false"
+            android:label="@string/onboarding_title" />
+
+        <activity
+            android:name=".DeviceStatusActivity"
+            android:exported="false"
+            android:label="@string/device_status_title" />
+
+        <activity
+            android:name=".TrafficHostActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".TrafficDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".CapabilityTableActivity"
+            android:exported="false"
+            android:label="@string/capability_table_title" />
+
+        <service
+            android:name=".BridgeForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Authorized security-testing bridge: executes commands on this device on behalf of a Strobes pentest engagement the device owner explicitly paired." />
+        </service>
+
+        <!-- Non-root UI automation fallback (see StrobesAccessibilityService,
+             ShellCommandRouter) — only usable once the device owner enables
+             it manually in Settings > Accessibility; nothing here can grant
+             itself this. -->
+        <service
+            android:name=".StrobesAccessibilityService"
+            android:exported="false"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- adb-only debug hook — see DebugCommandReceiver's doc comment.
+             exported=true because `adb shell` (uid=2000) is NOT exempt from
+             exported=false on this platform (confirmed: "Permission Denial
+             ... is not exported" when targeted directly by component name
+             even from shell) — there is no exported=false option that still
+             lets adb reach it. Safe here because the receiver itself
+             self-disables outside a debuggable build (checked at runtime),
+             so this only ever matters on a debug build already assumed to
+             be a local pentest-lab device, never a release build. -->
+        <receiver
+            android:name=".DebugCommandReceiver"
+            android:exported="true" />
+
+        <!-- Only exercised on API 26-28 (see ProxyTools.saveCaCertToDownloads
+             / file_paths.xml) — needed to hand the downloaded CA cert to the
+             system cert installer as a content:// URI. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+</manifest>
