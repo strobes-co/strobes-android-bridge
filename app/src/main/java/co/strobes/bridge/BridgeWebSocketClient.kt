@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit
  * request/response history readable back over this same channel instead of
  * requiring an external mitmproxy/Burp instance. proxy_install_root_ca /
  * proxy_uninstall_root_ca stage (only stage — see the dispatch case for why)
- * a Magisk module that, after a reboot, trusts the proxy's CA in the actual
+ * a root-manager module (Magisk/KernelSU/APatch) that, after a reboot, trusts the proxy's CA in the actual
  * system store rather than just the user-cert-store proxy_start installs
  * into.
  *
@@ -309,7 +309,7 @@ class BridgeWebSocketClient(
                 // reboot the physical device it's driving is a hazard this
                 // bridge does not take on. That step stays a local, human-
                 // confirmed action in the app's own UI (see
-                // ProxyController.rebootForRootCa / MagiskModuleInstaller).
+                // ProxyController.rebootForRootCa / RootCaModuleInstaller).
                 "proxy_install_root_ca" -> ProxyController.installRootCaModule()
                 "proxy_uninstall_root_ca" -> ProxyController.uninstallRootCaModule()
 

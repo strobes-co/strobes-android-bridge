@@ -9,10 +9,15 @@ import java.io.File
  * ProxyTools.kt's user-cert-store approach is a live, no-reboot substitute
  * for, because a direct SELinux/dm-verity bypass isn't achievable with plain
  * root (see that file's doc comment for exactly what was tried and why it
- * failed). A Magisk module is the actual sanctioned mechanism for this:
- * Magisk's own boot-time "magic mount" merges module files into /system
- * with correctly-labeled SELinux contexts, because Magisk — not this app —
- * is the one asking the kernel to allow it.
+ * failed). A root-manager module is the actual sanctioned mechanism for
+ * this: Magisk's boot-time "magic mount" (and KernelSU's / APatch's own
+ * equivalent — all three read the SAME `/data/adb/modules/<id>/` layout,
+ * `module.prop` format, and `remove`-file uninstall convention, by
+ * deliberate cross-tool compatibility) merges module files into /system
+ * with correctly-labeled SELinux contexts, because the root manager — not
+ * this app — is the one asking the kernel to allow it. This class is not
+ * tied to any one of the three; it just writes that shared layout and lets
+ * whichever root manager is actually installed do the merge at boot.
  *
  * Trade-off, and why this is a SEPARATE, human-gated path rather than what
  * proxy_start does automatically: the merge only happens at boot. Writing
@@ -26,7 +31,7 @@ import java.io.File
  * user-cert-store path leaves for apps that don't explicitly opt in via
  * their network security config.
  */
-object MagiskModuleInstaller {
+object RootCaModuleInstaller {
 
     private const val MODULE_ID = "strobes_mitm_ca"
     private const val MODULE_DIR = "/data/adb/modules/$MODULE_ID"
@@ -66,9 +71,10 @@ object MagiskModuleInstaller {
         return result
     }
 
-    /** Marks the module for removal on the NEXT boot — Magisk's own
-     * convention (a file literally named `remove` inside the module dir),
-     * rather than deleting files out from under an active magic-mount. */
+    /** Marks the module for removal on the NEXT boot — the shared Magisk/
+     * KernelSU/APatch module convention (a file literally named `remove`
+     * inside the module dir), rather than deleting files out from under an
+     * active magic-mount. */
     suspend fun uninstall(): JSONObject {
         val result = RootShellExecutor.executeShellCommand(
             "[ -d $MODULE_DIR ] && touch $MODULE_DIR/remove || true", 10,

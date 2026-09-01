@@ -237,7 +237,7 @@
                 android:background="@color/cds_border_subtle_00" />
 
             <!-- Root/system trust store — separate, slower path from the CA
-                 row above (needs a reboot; see MagiskModuleInstaller's doc
+                 row above (needs a reboot; see RootCaModuleInstaller's doc
                  comment). Reboot only ever fires from btn_root_ca_action's
                  own confirmation dialog, never automatically. -->
             <LinearLayout

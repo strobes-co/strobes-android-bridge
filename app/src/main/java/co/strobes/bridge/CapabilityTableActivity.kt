@@ -29,7 +29,7 @@ class CapabilityTableActivity : AppCompatActivity() {
         Row("Arbitrary file read/write", "Yes (any path)", "No (sandboxed VirtualFs only)", false),
         Row("Traffic interception (MITM)", "Yes", "No — no VPN-based fallback yet", false),
         Row("CA cert trust", "Yes (auto, no dialog)", "Yes (KeyChain dialog, user taps confirm)", true),
-        Row("System-wide CA trust store", "Yes (Magisk module + reboot)", "No", false),
+        Row("System-wide CA trust store", "Yes (Magisk/KernelSU/APatch module + reboot)", "No", false),
         Row("IMEI / phone number / SIM serial", "Yes", "No (restricted since Android 10)", false),
         Row("Read SMS", "Yes", "Yes (READ_SMS permission)", true),
         Row("Device identifiers (Android ID)", "Yes", "Yes", true),

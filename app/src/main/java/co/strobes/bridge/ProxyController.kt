@@ -118,8 +118,8 @@ object ProxyController {
             put("port", server.port)
             put("captured_count", ProxyHistoryStore.count())
             put("ca_installed", isCaTrusted())
-            put("root_ca_module_staged", MagiskModuleInstaller.isModuleStaged())
-            put("root_ca_active", MagiskModuleInstaller.isActiveInSystemStore(certAuthority.subjectHashOldFileName()))
+            put("root_ca_module_staged", RootCaModuleInstaller.isModuleStaged())
+            put("root_ca_active", RootCaModuleInstaller.isActiveInSystemStore(certAuthority.subjectHashOldFileName()))
             // Traffic interception (CA install + the system-wide proxy setting
             // both need root — see ProxyTools's doc comment) is the one piece
             // of this bridge with no non-root fallback in this pass (would
@@ -130,22 +130,22 @@ object ProxyController {
         }
     }
 
-    /** Stages the Magisk module — see MagiskModuleInstaller's doc comment
+    /** Stages the root-manager module (Magisk/KernelSU/APatch) — see RootCaModuleInstaller's doc comment
      * for why this is deliberately separate from the user-cert-store path
      * and never reboots on its own. */
     suspend fun installRootCaModule(): JSONObject {
-        return MagiskModuleInstaller.install(
+        return RootCaModuleInstaller.install(
             requireContext(), certAuthority.caCertPem(), certAuthority.subjectHashOldFileName(),
         )
     }
 
-    suspend fun uninstallRootCaModule(): JSONObject = MagiskModuleInstaller.uninstall()
+    suspend fun uninstallRootCaModule(): JSONObject = RootCaModuleInstaller.uninstall()
 
     /** The one call in this whole feature that reboots the device. Callers
      * (both the in-app button and any remote command) must treat this as a
      * distinct, explicitly-confirmed action — never chained automatically
      * after installRootCaModule(). */
-    suspend fun rebootForRootCa(): JSONObject = MagiskModuleInstaller.rebootNow()
+    suspend fun rebootForRootCa(): JSONObject = RootCaModuleInstaller.rebootNow()
 
     fun history(sinceId: Long, limit: Int, hostFilter: String?, includeBodies: Boolean): JSONObject {
         val entries = ProxyHistoryStore.list(sinceId, limit, hostFilter)

@@ -22,7 +22,7 @@
     <string name="root_ca_not_installed">Not installed</string>
     <string name="root_ca_staged">Staged — reboot to activate</string>
     <string name="root_ca_active">Active in system store</string>
-    <string name="root_ca_hint">Trusted by apps that don\'t opt into user certs — the modern-SDK default. Needs a device reboot to take effect (Magisk module).</string>
+    <string name="root_ca_hint">Trusted by apps that don\'t opt into user certs — the modern-SDK default. Needs a device reboot to take effect (Magisk/KernelSU/APatch module).</string>
     <string name="action_install_root_ca">Install (reboot required)</string>
     <string name="action_reboot_now">Reboot now</string>
     <string name="action_remove_root_ca">Remove (reboot required)</string>
@@ -46,7 +46,7 @@
     <string name="hint_shell_name">Device label (e.g. pixel-8-test-lab)</string>
     <string name="action_start">Start bridge</string>
     <string name="action_stop">Stop</string>
-    <string name="footer_hint">Requires root (Magisk/KernelSU) for full functionality</string>
+    <string name="footer_hint">Requires root (Magisk/KernelSU/APatch) for full functionality</string>
 
     <string name="accessibility_service_description">Lets Strobes Bridge automate taps, swipes, typing, and screenshots on this device without root — used only while a pentest engagement you paired this device to is actively driving it.</string>
     <string name="section_automation">Automation (non-root fallback)</string>
