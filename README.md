@@ -132,6 +132,13 @@ automating an SMS-OTP login flow).
 binary UI-automation artifacts (screenshot PNGs, UI-dump XML) without the
 UTF-8 mangling a shell stdout capture would cause.
 
+Single-frame transfers cap at ~7.5 MB (the platform's WebSocket frame
+limit). For anything larger — most real APKs, video captures —
+`file_upload_chunk` / `file_download_chunk` move the file in
+offset-addressed slices over the same channel (ordered chunks; an
+out-of-order chunk is rejected with the expected offset so the agent can
+resume exactly rather than corrupting the file).
+
 ## Non-root fallback in depth
 
 When no root broker is present, enabling the **Strobes Accessibility
@@ -165,10 +172,41 @@ Shell Bridge daemon) so the platform side treats this as a drop-in
 alternative transport — same Shell model, same REST endpoints, same
 `shell_execute`/`file_*`/`env_info` command set — plus Android-specific
 commands layered on top: `list_packages`, `network_info`, `logcat`,
-`device_identifiers`, `read_sms`, `proxy_*`, `frida_*`. Not implemented:
+`device_identifiers`, `read_sms`, `proxy_*`, `frida_*`, and chunked
+transfer (`file_upload_chunk` / `file_download_chunk`). Not implemented:
 PTY sessions (`pty_open` returns a graceful "not supported" instead of
 hanging) and background shell jobs (`shell_bg_*`) — long UI-automation
-flows are instead driven as a sequence of ordinary `shell_execute` calls.
+flows are instead driven as a sequence of ordinary `shell_execute` calls,
+and a stuck one can be aborted with a `cancel` message.
+
+`identify` (and `env_info`) advertise a `protocol_version` and the full
+`commands` list, so the platform can plan against exactly what this bridge
+speaks instead of discovering gaps by getting `Unknown command` back.
+
+### Reliability & safety
+
+Built for an unattended phone driven for the length of an engagement:
+
+- **Stays alive when idle** — the foreground service holds a partial wake
+  lock, and the setup wizard requests a Doze/battery-optimization exemption
+  so the control socket isn't throttled silent.
+- **Detects dead connections** — an app-level ping plus a liveness watchdog
+  force-closes a half-open socket (TCP alive, peer gone) so the service's
+  reconnect backoff actually kicks in, instead of the device looking
+  connected forever.
+- **One action at a time** — shell-backed commands are serialized so
+  overlapping calls can't interleave on the shared root shell; every
+  command runs under a dispatch deadline and always returns a response
+  (even a timeout or "response too large" error), so a wedged handler or an
+  over-cap payload never strands the agent.
+- **Safe to replay** — a command re-issued after a mid-command disconnect
+  returns its cached result instead of re-running a non-idempotent action
+  (`pm install`, a tap).
+- **Refuses to brick itself** — destructive device-lifecycle commands
+  (reboot, factory wipe, uninstalling the bridge, deleting a filesystem
+  root) are blocked over the remote channel and stay human-confirmed in the
+  app's own UI; scoped work (`rm -rf /data/local/tmp/...`, uninstalling a
+  *target* app) is untouched.
 
 ## Building & releasing
 

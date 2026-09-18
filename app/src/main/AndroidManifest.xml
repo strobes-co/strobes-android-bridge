@@ -9,6 +9,11 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Lets the onboarding wizard ask the device owner to exempt the bridge
+         from Doze/battery optimization, so the foreground service's wake lock
+         and outbound control socket actually survive an unattended, idle test
+         phone instead of being throttled silent. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- Lets list_packages enumerate every installed app without root, via
          PackageManager, instead of needing `pm list packages` through a
          root shell. A sideloaded internal tool like this is exactly the

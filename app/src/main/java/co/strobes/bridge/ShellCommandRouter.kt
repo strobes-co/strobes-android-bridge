@@ -32,10 +32,117 @@ object ShellCommandRouter {
     private val MONKEY_LAUNCH_RE = Regex("""^monkey\s+.*-p\s+(\S+).*$""")
 
     suspend fun execute(command: String, timeoutSeconds: Int): JSONObject {
+        // A cloud agent drives this device unattended: an irreversible or
+        // session-severing command (reboot, factory wipe, uninstalling the
+        // bridge itself, nuking a filesystem root) must NOT be reachable
+        // over the remote channel just because shell_execute is a root
+        // passthrough. The dispatch comments elsewhere claim reboot "is
+        // never exposed here" — without this guard, shell_execute("reboot")
+        // silently made that claim false. Destructive device lifecycle
+        // actions stay human-confirmed, in the app's own UI (e.g. the
+        // reboot-for-root-CA flow in DeviceStatusActivity).
+        classifyDestructive(command.trim())?.let { reason ->
+            return fail(reason)
+        }
         if (RootShellExecutor.checkRoot().available) {
             return RootShellExecutor.executeShellCommand(command, timeoutSeconds)
         }
         return executeNonRoot(command.trim())
+    }
+
+    /**
+     * Pure classification of whether a shell command is a blocked
+     * destructive/lifecycle action. Returns a human-readable rejection
+     * reason, or null if the command is allowed. Kept side-effect-free (no
+     * Android, no root check) so it's unit-testable off-device and so the
+     * policy lives in exactly one place.
+     *
+     * Scope is deliberately narrow — only genuinely irreversible or
+     * connection-severing operations, matched precisely so ordinary pentest
+     * work (e.g. `rm -rf /data/local/tmp/foo`, uninstalling a *target* app)
+     * is untouched. Splits on `;`, `&&`, `||`, `|`, and newlines so a
+     * blocked verb can't be smuggled past as the second half of a compound
+     * command.
+     */
+    fun classifyDestructive(command: String): String? {
+        val segments = command
+            .split(Regex("""[\n;]|&&|\|\||\|"""))
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        for (seg in segments) {
+            destructiveReason(seg)?.let { return it }
+        }
+        return null
+    }
+
+    private const val SELF_PKG = "co.strobes.bridge"
+
+    private fun destructiveReason(seg: String): String? {
+        // Normalize leading `su -c`/`sh -c`/`toybox`/`busybox` wrappers so
+        // e.g. `su -c reboot` is classified by its real verb, not the wrapper.
+        val s = seg
+            .removePrefix("su -c ").removePrefix("su root ")
+            .removePrefix("sh -c ").removePrefix("toybox ").removePrefix("busybox ")
+            .trim()
+            .removeSurrounding("\"").removeSurrounding("'")
+            .trim()
+        val word0 = s.substringBefore(' ').substringAfterLast('/') // strip any path
+
+        // Power/lifecycle: rebooting or powering off the very device the
+        // agent is driving orphans the session.
+        if (word0 in setOf("reboot", "shutdown", "halt", "poweroff")) {
+            return "'$word0' is blocked over the remote bridge: rebooting/powering off the device " +
+                "the agent is driving would orphan the session. Do it from the app UI on-device."
+        }
+        if (Regex("""^svc\s+power\s+(reboot|shutdown)""").containsMatchIn(s)) {
+            return "'svc power' reboot/shutdown is blocked over the remote bridge — do it from the app UI on-device."
+        }
+
+        // Factory reset / recovery wipe — irreversible.
+        if (Regex("""(^|\s)(--wipe_data|--wipe_cache)(\s|$)""").containsMatchIn(s) ||
+            word0 == "fastboot" ||
+            Regex("""^recovery\b""").containsMatchIn(s) ||
+            Regex("""MASTER_CLEAR|FACTORY_RESET""").containsMatchIn(s)
+        ) {
+            return "Factory-reset / recovery-wipe commands are blocked over the remote bridge (irreversible)."
+        }
+
+        // Filesystem destruction of a real root (not a scratch subdir).
+        if (word0 == "rm") {
+            val recursive = Regex("""(^|\s)-[a-zA-Z]*[rR][a-zA-Z]*f|(^|\s)-[a-zA-Z]*f[a-zA-Z]*[rR]|(^|\s)-[rR]\s""").containsMatchIn(s) ||
+                Regex("""(^|\s)--recursive""").containsMatchIn(s)
+            if (recursive) {
+                val protectedRoots = listOf("/", "/system", "/data", "/sdcard", "/vendor", "/storage")
+                // Match a protected root as a whole path token, allowing a
+                // trailing slash or wildcard but NOT a deeper path segment.
+                val targets = Regex("""(?<=\s)(/[^\s]*)""").findAll(s).map { it.value.trimEnd('/', '*') }
+                for (t in targets) {
+                    val normalized = if (t.isEmpty()) "/" else t
+                    if (normalized in protectedRoots) {
+                        return "Recursive delete of a filesystem root ('$normalized') is blocked over the remote bridge. " +
+                            "Deleting scoped paths (e.g. /data/local/tmp/...) is allowed."
+                    }
+                }
+            }
+        }
+
+        // Low-level block-device destruction.
+        if (word0 == "mkfs" || Regex("""^mkfs\.""").containsMatchIn(word0)) {
+            return "'mkfs' (reformatting a filesystem) is blocked over the remote bridge."
+        }
+        if (word0 == "dd" && Regex("""of=/dev/block/""").containsMatchIn(s)) {
+            return "'dd' to a block device is blocked over the remote bridge (can brick the device)."
+        }
+
+        // Removing the bridge itself severs the very channel this ran over.
+        if (Regex("""^pm\s+(uninstall|clear|disable(-user)?)\b""").containsMatchIn(s) &&
+            s.contains(SELF_PKG)
+        ) {
+            return "Uninstalling/clearing/disabling the Strobes Bridge app itself ($SELF_PKG) is blocked — " +
+                "it would sever this control channel. Uninstall from the launcher on-device instead."
+        }
+
+        return null
     }
 
     private suspend fun executeNonRoot(command: String): JSONObject {
