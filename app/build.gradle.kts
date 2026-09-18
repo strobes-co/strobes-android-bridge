@@ -80,6 +80,12 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.78.1")
 
+    // Local JVM unit tests — for the off-device, side-effect-free policy
+    // logic (e.g. ShellCommandRouter.classifyDestructive, wsUrl building)
+    // that must be right without a device in the loop.
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+
     // Instrumented tests run ON-DEVICE — used to exercise ShellCommandRouter's
     // non-root path through StrobesAccessibilityService for real, the same
     // way BridgeWebSocketClient's shell_execute handler actually calls it,

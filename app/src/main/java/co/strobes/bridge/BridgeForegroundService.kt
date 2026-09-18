@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +48,16 @@ class BridgeForegroundService : Service() {
     private var loopJob: Job? = null
     private val stateLock = Mutex()
 
+    // A foreground service survives being killed, but Doze still suspends its
+    // network and defers the ping loop's delay() — an idle test phone would
+    // go silent and the agent would see a dead device. A partial wake lock
+    // keeps the CPU (not the screen) alive while the bridge is running so the
+    // control channel stays responsive unattended. The battery-optimization
+    // exemption that lets this actually hold under Doze is requested from the
+    // onboarding wizard; without it Android may still throttle, but the lock
+    // is the necessary half we own here.
+    private var wakeLock: PowerManager.WakeLock? = null
+
     @Volatile
     private var running = false
 
@@ -79,6 +90,7 @@ class BridgeForegroundService : Service() {
         if (running) return
         running = true
         Prefs.setBridgeRunning(this, true)
+        acquireWakeLock()
         startForeground(NOTIFICATION_ID, buildNotification("Connecting…"))
         loopJob = serviceScope.launch { connectLoop() }
 
@@ -103,12 +115,32 @@ class BridgeForegroundService : Service() {
         }
     }
 
+    private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) return
+        val pm = getSystemService(PowerManager::class.java) ?: return
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "StrobesBridge::control").apply {
+            setReferenceCounted(false)
+            // No timeout: the bridge is meant to run for the length of an
+            // engagement. It's released deterministically in stopBridge().
+            acquire()
+        }
+    }
+
+    private fun releaseWakeLock() {
+        try {
+            if (wakeLock?.isHeld == true) wakeLock?.release()
+        } catch (_: Exception) {
+        }
+        wakeLock = null
+    }
+
     private fun stopBridge() {
         running = false
         Prefs.setBridgeRunning(this, false)
         loopJob?.cancel()
         client?.close()
         client = null
+        releaseWakeLock()
         _status.value = "stopped"
         stopForeground(STOP_FOREGROUND_REMOVE)
 

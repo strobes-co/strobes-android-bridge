@@ -62,7 +62,13 @@ class OnboardingActivity : AppCompatActivity() {
 
     private val requestPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
-    ) { renderPermissionsStatus() }
+    ) {
+        renderPermissionsStatus()
+        // Once runtime permissions are dealt with, ask for the Doze exemption
+        // so the bridge's wake lock + control socket actually survive an
+        // unattended idle phone. No-op if already exempt.
+        requestBatteryExemption()
+    }
 
     // A plain startActivity() leaves CertInstaller's getCallingPackage()
     // null, so its "This certificate from ___ must be installed" dialog
@@ -165,7 +171,39 @@ class OnboardingActivity : AppCompatActivity() {
         val granted = nonRootPermissions.filter {
             ContextCompat.checkSelfPermission(this, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
         }
-        permissionsStatus.text = "${granted.size} of ${nonRootPermissions.size} granted"
+        val battery = if (isIgnoringBatteryOptimizations()) {
+            "battery optimization: exempt"
+        } else {
+            "battery optimization: ON (may throttle the bridge when idle — tap Grant)"
+        }
+        permissionsStatus.text = "${granted.size} of ${nonRootPermissions.size} granted\n$battery"
+    }
+
+    private fun isIgnoringBatteryOptimizations(): Boolean {
+        val pm = getSystemService(android.os.PowerManager::class.java) ?: return false
+        return pm.isIgnoringBatteryOptimizations(packageName)
+    }
+
+    /** Doze exemption so the foreground service's wake lock and outbound
+     * control socket aren't throttled silent on an idle, unattended test
+     * phone. Falls back to the general battery-optimization settings list if
+     * the direct request intent isn't handled. */
+    @android.annotation.SuppressLint("BatteryLife")
+    private fun requestBatteryExemption() {
+        if (isIgnoringBatteryOptimizations()) return
+        try {
+            startActivity(
+                Intent(
+                    android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    android.net.Uri.parse("package:$packageName"),
+                ),
+            )
+        } catch (e: Exception) {
+            try {
+                startActivity(Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+            } catch (_: Exception) {
+            }
+        }
     }
 
     private fun renderAccessibilityStatus() {
