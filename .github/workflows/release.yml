@@ -1,6 +1,9 @@
 name: Release APK
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       release_name:
@@ -36,21 +39,23 @@ jobs:
       - name: Determine version
         id: version
         run: |
-          RUN_TAG="run-${{ github.run_number }}"
+          APP_VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts)
+          TAG="v${APP_VERSION}"
           if [ -n "${{ github.event.inputs.release_name }}" ]; then
-            RUN_TAG="${{ github.event.inputs.release_name }}"
+            TAG="${{ github.event.inputs.release_name }}"
           fi
-          echo "tag=$RUN_TAG" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$APP_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Rename APK
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/debug/app-debug.apk "dist/strobes-bridge-${{ steps.version.outputs.tag }}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/strobes-android-bridge-${{ steps.version.outputs.tag }}.apk"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: "Strobes Bridge ${{ steps.version.outputs.tag }}"
+          name: "Strobes Android Bridge ${{ steps.version.outputs.tag }}"
           files: dist/*.apk
           generate_release_notes: true
